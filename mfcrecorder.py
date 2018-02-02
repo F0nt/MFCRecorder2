@@ -20,6 +20,7 @@ if __name__ == '__main__':
         ).start()
 
     next_run = datetime.datetime.now()
+    client = classes.models.TestClient()
     while True:
         if datetime.datetime.now() < next_run:
             time.sleep(0.1)
@@ -27,7 +28,7 @@ if __name__ == '__main__':
         print("another run {}".format(datetime.datetime.now()))
         next_run += datetime.timedelta(seconds=config.settings.interval)
         config.refresh()
-        for uid, model in classes.models.get_online_models().items():
+        for uid, model in client.get_online_models().items():
             if not config.does_model_pass_filter(model):
                 continue
             classes.recording.start_recording(model.session, config)

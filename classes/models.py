@@ -5,6 +5,28 @@ import mfcauto
 
 SERVER_CONFIG_URL = 'http://www.myfreecams.com/_js/serverconfig.js'
 
+class TestClient:
+    def __init__(self):
+        self._loaded = False
+        self._client = mfcauto.SimpleClient()
+        self._client.on(mfcauto.FCTYPE.CLIENT_TAGSLOADED, self._set_loaded)
+
+    def _set_loaded(self):
+        self._loaded = True
+
+    def get_online_models(self):
+        server_config = requests.get(SERVER_CONFIG_URL).json()
+        servers = server_config['h5video_servers'].keys()
+        try:
+            all_results = mfcauto.Model.find_models(lambda m: True)
+            models = {int(model.uid): Model(model) for model in all_results
+                      if model.uid > 0 and model.bestsession['vs'] == mfcauto.STATE.FreeChat
+                      and str(model.bestsession['camserv']) in servers}
+            print('{} models online'.format(len(models)))
+            return models
+        except Exception as e:
+            print(e)
+
 def get_online_models():
     '''returns a dictionary of all online models in free chat'''
     server_config = requests.get(SERVER_CONFIG_URL).json()
