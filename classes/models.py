@@ -8,13 +8,15 @@ SERVER_CONFIG_URL = 'http://www.myfreecams.com/_js/serverconfig.js'
 class TestClient:
     def __init__(self):
         self._loaded = False
-        self._client = mfcauto.SimpleClient()
+        self._client = mfcauto.Client(asyncio.get_event_loop())
         self._client.on(mfcauto.FCTYPE.CLIENT_TAGSLOADED, self._set_loaded)
+        self._client.connect()
 
     def _set_loaded(self):
         self._loaded = True
 
     def get_online_models(self):
+        print(self._loaded)
         server_config = requests.get(SERVER_CONFIG_URL).json()
         servers = server_config['h5video_servers'].keys()
         try:
