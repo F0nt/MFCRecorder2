@@ -8,15 +8,17 @@ SERVER_CONFIG_URL = 'http://www.myfreecams.com/_js/serverconfig.js'
 class TestClient:
     def __init__(self):
         self._loaded = False
-        self._client = mfcauto.Client(asyncio.get_event_loop())
+        loop = asyncio.get_event_loop()
+        self._client = mfcauto.Client(loop)
         self._client.on(mfcauto.FCTYPE.CLIENT_TAGSLOADED, self._set_loaded)
-        self._client.connect()
+        loop.run_until_complete(self._client.connect(True))
+        threading.Thread(target=loop.run_forever).start()
 
     def _set_loaded(self):
         self._loaded = True
 
     def get_online_models(self):
-        print(self._loaded)
+        print('mfcauto loaded: {}'.format(self._loaded))
         server_config = requests.get(SERVER_CONFIG_URL).json()
         servers = server_config['h5video_servers'].keys()
         try:
@@ -28,44 +30,6 @@ class TestClient:
             return models
         except Exception as e:
             print(e)
-
-def get_online_models():
-    '''returns a dictionary of all online models in free chat'''
-    server_config = requests.get(SERVER_CONFIG_URL).json()
-    servers = server_config['h5video_servers'].keys()
-    models = {}
-
-    def on_tags():
-        '''function for the TAGS event in mfcclient'''
-        nonlocal models
-
-        try:
-            all_results = mfcauto.Model.find_models(lambda m: True)
-            models = {int(model.uid): Model(model) for model in all_results
-                      if model.uid > 0 and model.bestsession['vs'] == mfcauto.STATE.FreeChat
-                      and str(model.bestsession['camserv']) in servers}
-
-            print('{} models online'.format(len(models)))
-            client.disconnect()
-        except Exception as e:
-            print(e)
-
-    #setting a new event loop, because it gets closed in the mfcauo client (feels dirty)
-    asyncio.set_event_loop(asyncio.new_event_loop())
-    #we dont want to query the models in CLIENT_MODELSLOADED, because we are
-    #missing the tags at this point. Rather query everything on TAGS
-    client = mfcauto.SimpleClient()
-    client.on(mfcauto.FCTYPE.CLIENT_TAGSLOADED, on_tags)
-
-    #put the blocking connect call into another thread in case the loop becomes unresponsive
-    t = threading.Thread(target=client.connect)
-    t.start()
-    #wait up to a minute for the model list from mfcauto
-    t.join(60)
-    if t.is_alive():
-        print("fetching online model list timed out")
-
-    return models
 
 def get_model(uid_or_name):
     '''returns a tuple with uid and name'''
