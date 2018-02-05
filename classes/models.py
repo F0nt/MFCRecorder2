@@ -19,8 +19,20 @@ class TestClient:
 
     def get_online_models(self):
         print('mfcauto loaded: {}'.format(self._loaded))
-        server_config = requests.get(SERVER_CONFIG_URL).json()
-        servers = server_config['h5video_servers'].keys()
+        success = False
+        remaining_tries = 10
+        while not success:
+            try:
+                server_config = requests.get(SERVER_CONFIG_URL).json()
+                servers = server_config['h5video_servers'].keys()
+                success = True
+                print('url loaded')
+            except Exception as e:
+                remaining_tries -= 1
+                if remaining_tries > 0:
+                    print(e)
+                else:
+                    raise
         try:
             all_results = mfcauto.Model.find_models(lambda m: True)
             models = {int(model.uid): Model(model) for model in all_results
