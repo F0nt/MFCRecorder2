@@ -17,3 +17,5 @@ colorama
 
 
 gevent
+
+git+https://github.com/ZombieAlex/mfcauto.py@master
