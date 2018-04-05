@@ -6,7 +6,6 @@ import hashlib
 import base64
 import enum
 import requests
-import numpy
 
 def try_eval(val):
     try:
